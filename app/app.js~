@@ -5,12 +5,11 @@ import cors from "cors";
 import bodyParser from "body-parser";
 import path from "path";
 import fs from "fs";
-import { DisblockUser } from "./jobs/admin";
 
 import privateRoutes from "./routes/private";
 import publicRoutes from "./routes/public";
-
 require("./database/mongo");
+
 class App {
   constructor() {
     this.app = express();

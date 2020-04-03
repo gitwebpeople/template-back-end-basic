@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const Professor = new mongoose.Schema(
+const User = new mongoose.Schema(
   {
     nome: {
 	type: String,
@@ -10,20 +10,9 @@ const Professor = new mongoose.Schema(
 	type: String,
 	required: true
     },
-    loginSocial: {
-	facebook: {
-	  email: String,
-	  foto: String
-	},
-	google: {
-	  email: String,
-	  foto: String
-	}
-    },
     cpf: String,
     dataNascimento: Date, 
     sexo: String,
-    fotoPerfil: String,
     cidade: String, 
     estado: String,
     password: {
@@ -36,4 +25,4 @@ const Professor = new mongoose.Schema(
     timestamps: true
   }
 );
-module.exports = mongoose.model("professor", Professor);
+module.exports = mongoose.model("user", User);

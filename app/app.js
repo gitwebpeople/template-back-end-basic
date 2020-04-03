@@ -42,7 +42,6 @@ class App {
     this.app.use("/dist", express.static(path.join(__dirname, "../dist")));
     privateRoutes(this.app);
     publicRoutes(this.app);
-    DisblockUser();
     return this;
   }
 }

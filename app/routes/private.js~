@@ -1,5 +1,6 @@
 import user from '../controller/user'
 import { authenticate } from '../middleware/passport'
+import { checkPagePermissions } from '../middleware/adminActions'
 import token from '../middleware/token'
 
 module.exports = gl => {
