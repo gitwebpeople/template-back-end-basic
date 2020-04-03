@@ -1,0 +1,97 @@
+import "dotenv/config";
+import bcrypt from "bcrypt";
+import { fieldValidation, validateEmail } from "../utils/validations";
+import ModelUser from "../database/mongo/models/user";
+import mongoose from "mongoose";
+import Login from "../utils/user";
+
+const saltRounds = 10;
+export default {
+  async store(req, res) {
+    const { name, email, cpf, nickname, password } = req.body;
+    try {
+      if (await new Login().verifyNickName(nickname))
+        throw { status: 400, msg: `nickname ${nickname} is already in use.` };
+    } catch (e) {
+      return res.status(e.status).send(e.msg);
+    }
+    const fail = fieldValidation({ name, password, email });
+    if (!fail.return) {
+      return res.status(400).send(`${fail.message} ${fail.field}`);
+    }
+
+    if (!validateEmail(email)) return res.status(400).send(`E-mail is invalid`);
+    const user = await ModelUser.findOne({ email });
+    if (user) {
+      return res.status(400).send(`User ${email}, already exists`);
+    }
+    if (nickname.length > 17)
+      return res.status(400).send("nickname must be less than 16 characters");
+    const passHash = await bcrypt.hash(password, saltRounds);
+    const newUser = new ModelUser();
+    newUser.name = name;
+    newUser.nickname = nickname;
+    newUser.cpf = cpf;
+    newUser.email = email;
+    newUser.password = passHash;
+    const userSaved = await newUser.save();
+    return res.json(userSaved);
+  },
+  async show(req, res) {
+    try {
+      const { login, password, type, pic, name } = req.query;
+      if (!type) return res.sendStatus(500);
+      if (login.search("@") != -1)
+        if (!validateEmail(login))
+          return res.status(400).send("E-mail is invalid");
+
+      const _login = new Login(login, password, { name, foto: pic });
+      if (type == "normal") {
+        const result = await _login.normalLogin();
+        if (result.status == 200) {
+          return res.json({ ...result.payload, token: result.token });
+        } else {
+          return res.status(result.status).send(result.msg);
+        }
+      } else if (type == "facebook") {
+        const result = await _login.facebookLogin();
+        return res.json({ ...result.payload, token: result.token });
+      }
+    } catch (e) {
+      return res.status(500).send(e.toString());
+    }
+  },
+  async update(req, res) {
+    const user = new Login().getUserPayload(req.headers.authorization);
+    const { file, name, password, nickname } = req.body;
+    const modelUser = await ModelUser.findById(
+      mongoose.Types.ObjectId(user.id)
+    );
+    if (!nickname) {
+      if (!modelUser) return res.status(400).send("no users found");
+      if (name) modelUser.name = name;
+      if (password) modelUser.passowrd = passowrd;
+      if (file) {
+        modelUser.media = { url: file.url, type: file.type };
+      }
+      await modelUser.save();
+      return res.json(modelUser);
+    } else {
+      try {
+        const hasNickname = await ModelUser.findOne({ nickname });
+        if (hasNickname)
+          return res.status(400).send("Nickname is already in use");
+        if (nickname.length > 17)
+          return res
+            .status(400)
+            .send("nickname must be less than 16 characters");
+        modelUser.nickname = nickname;
+
+        await modelUser.save();
+        return res.json(modelUser);
+      } catch (e) {
+        return res.status(400).json({ err: e });
+      }
+    }
+  }
+};
